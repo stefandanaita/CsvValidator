@@ -1,5 +1,5 @@
 {
-	"name": "dsa.io/laravel-csv-validator",
+	"name": "dsa-io/csv-validator",
 	"description": "A CSV Validator based on Laravel's built-in Validator",
 	"type": "library",
 	"require": {
