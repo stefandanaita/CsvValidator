@@ -77,7 +77,7 @@ class CsvValidator
             $v = \Validator::make($combined, $this->getRules());
 
             if ($v->fails()) {
-                $this->setErrors($lineIndex, $v->message()->toArray());
+                $this->setErrors($lineIndex, $v->messages()->toArray());
             }
         }
 
