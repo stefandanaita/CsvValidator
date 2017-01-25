@@ -12,7 +12,8 @@ class CsvValidator {
         $rules = [],
         $headingKeys = [],
         $errors = [],
-        $trim = true;
+        $trim = true,
+        $encoding = 'UTF-8';
 
 	public function make($csv, $rules, $trim = true, $encoding = 'UTF-8') {
         // Validate the CSV file
@@ -25,6 +26,7 @@ class CsvValidator {
         }
 
         $this->trim = $trim;
+        $this->encoding = $encoding;
 
         // Set the $rules and $headingKeys
         $this->setRules($rules);
@@ -51,10 +53,8 @@ class CsvValidator {
         if($this->hasHeadingRow()) {
             $headingRow = $csv->fgetcsv();
 
-            // Trim the elements
-            if($this->trim) {
-                $headingRow = array_map('trim', $headingRow);
-            }
+            // Trim the elements and convert them
+            $headingRow = array_map('encodeCell', $headingRow);
 
             if(empty($headingRow)) {
                 throw new \RuntimeException('The CSV does not contain a heading row');
@@ -159,5 +159,18 @@ class CsvValidator {
         }
 
         return $combined;
+    }
+
+    /**
+     * @param $content
+     * @return string
+     */
+    private function encodeCell($content)
+    {
+        if($this->trim) {
+            $content = trim($content);
+        }
+
+        return iconv(mb_detect_encoding($content, mb_detect_order(), true), $this->encoding, $content);
     }
 }
