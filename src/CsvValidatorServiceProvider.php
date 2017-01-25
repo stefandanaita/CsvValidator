@@ -1,4 +1,4 @@
-<?php namespace dsaio\CsvValidator;
+<?php namespace Dsaio\CsvValidator;
 /**
  * Created by Stefan Danaita.
  * stefan@tribepad.com
