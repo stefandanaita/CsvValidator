@@ -51,7 +51,7 @@ class CsvValidator
             $headingRow = $csv->fgetcsv();
 
             // Trim the elements and convert them to the right encoding
-            $headingRow = array_map('encodeCell', $headingRow);
+            $headingRow = array_map([$this, 'encodeCell'], $headingRow);
 
             if (empty($headingRow)) {
                 throw new \RuntimeException('The CSV does not contain a heading row');
@@ -68,7 +68,7 @@ class CsvValidator
             $lineIndex++;
 
             // Trim the elements and convert them to the right encoding
-            $row = array_map('encodeCell', $row);
+            $row = array_map([$this, 'encodeCell'], $row);
 
             // Build assoc array between header and row elements
             $combined = $this->hasHeadingRow() ? $this->combineRowHeader($row, $headingRow) : $row;
@@ -226,7 +226,7 @@ class CsvValidator
     {
         $headingKeys = $this->headingKeys;
 
-        return !$headingKeys === array_filter($headingKeys, 'is_int');
+        return $headingKeys !== array_filter($headingKeys, 'is_int');
     }
 
     /**
