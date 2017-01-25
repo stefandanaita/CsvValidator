@@ -104,7 +104,7 @@ class CsvValidator
 
         foreach ($row as $index => $heading) {
             if (!in_array($heading, $this->getHeadingKeys())) {
-                $errors[$index] = $heading;
+                $errors[$heading][0] = 'Heading ' . $heading . ' is not a valid heading for this CSV.';
             }
         }
 
