@@ -63,8 +63,7 @@ class CsvValidator
             }
         }
 
-        while (!$csv->eof()) {
-            $row = $csv->fgetcsv();
+        while ($row = $csv->fgetcsv()) {
             $lineIndex++;
 
             // Trim the elements and convert them to the right encoding
