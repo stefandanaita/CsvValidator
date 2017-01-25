@@ -15,7 +15,8 @@ class CsvValidator {
         $trim = true,
         $encoding = 'UTF-8';
 
-	public function make($csv, $rules, $trim = true, $encoding = 'UTF-8') {
+	public function make($csv, $rules, $trim = true, $encoding = 'UTF-8')
+    {
         // Validate the CSV file
         $v = \Validator::make(['file' => $csv], [
             'file' => 'required|mimes:csv,txt'
@@ -43,7 +44,8 @@ class CsvValidator {
 		return $this;
 	}
 
-	public function fails() {
+	public function fails()
+    {
 	    $lineIndex = 0;
 		$errors = [];
         $csv = $this->csv;
@@ -53,7 +55,7 @@ class CsvValidator {
         if($this->hasHeadingRow()) {
             $headingRow = $csv->fgetcsv();
 
-            // Trim the elements and convert them
+            // Trim the elements and convert them to the right encoding
             $headingRow = array_map('encodeCell', $headingRow);
 
             if(empty($headingRow)) {
@@ -66,10 +68,8 @@ class CsvValidator {
         while ($row = $csv->fgetcsv()) {
             $lineIndex++;
 
-            // Trim the elements
-            if($this->trim) {
-                $row = array_map('trim', $row);
-            }
+            // Trim the elements and convert them to the right encoding
+            $row = array_map('encodeCell', $row);
 
             // Build assoc array between header and row elements
             $combined = !empty($headingRow) ? $this->combineRowHeader($row, $headingRow) : $row;
@@ -91,7 +91,8 @@ class CsvValidator {
      * @param $row
      * @return array
      */
-    private function validateHeadingRow($row) {
+    private function validateHeadingRow($row)
+    {
 	    $errors = [];
 
 	    foreach($row as $index => $heading) {
