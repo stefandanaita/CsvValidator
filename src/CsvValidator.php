@@ -11,9 +11,10 @@ class CsvValidator {
 	private $csv,
         $rules = [],
         $headingKeys = [],
-        $errors = [];
+        $errors = [],
+        $trim = true;
 
-	public function make($csv, $rules, $encoding = 'UTF-8') {
+	public function make($csv, $rules, $trim = true, $encoding = 'UTF-8') {
         // Validate the CSV file
         $v = \Validator::make(['file' => $csv], [
             'file' => 'required|mimes:csv,txt'
@@ -22,6 +23,8 @@ class CsvValidator {
         if($v->fails()) {
             throw new \RuntimeException('This file is not a valid CSV file.');
         }
+
+        $this->trim = $trim;
 
         // Set the $rules and $headingKeys
         $this->setRules($rules);
@@ -48,6 +51,11 @@ class CsvValidator {
         if($this->hasHeadingRow()) {
             $headingRow = $csv->fgetcsv();
 
+            // Trim the elements
+            if($this->trim) {
+                $headingRow = array_map('trim', $headingRow);
+            }
+
             if(empty($headingRow)) {
                 throw new \RuntimeException('The CSV does not contain a heading row');
             }
@@ -57,6 +65,11 @@ class CsvValidator {
 
         while ($row = $csv->fgetcsv()) {
             $lineIndex++;
+
+            // Trim the elements
+            if($this->trim) {
+                $row = array_map('trim', $row);
+            }
 
             // Build assoc array between header and row elements
             $combined = !empty($headingRow) ? $this->combineRowHeader($row, $headingRow) : $row;
