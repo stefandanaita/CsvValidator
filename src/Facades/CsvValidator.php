@@ -1,4 +1,5 @@
 <?php namespace Dsaio\CsvValidator\Facades;
+
 /**
  * Created by Stefan Danaita.
  * stefan@tribepad.com
@@ -8,13 +9,17 @@
 
 use Illuminate\Support\Facades\Facade;
 
-class CsvValidator extends Facade {
+class CsvValidator extends Facade
+{
 
     /**
-    * Get the registered name of the component.
-    *
-    * @return string
-    */
-    protected static function getFacadeAccessor() { return 'csv-validator'; }
+     * Get the registered name of the component.
+     *
+     * @return string
+     */
+    protected static function getFacadeAccessor()
+    {
+        return 'csv-validator';
+    }
 
 }

@@ -6,23 +6,23 @@
  * 23/01/2017
  */
 
-class CsvValidator {
-
-	private $csv,
+class CsvValidator
+{
+    private $csv,
         $rules = [],
         $headingKeys = [],
         $errors = [],
         $trim = true,
         $encoding = 'UTF-8';
 
-	public function make($csv, $rules, $trim = true, $encoding = 'UTF-8')
+    public function make($csv, $rules, $trim = true, $encoding = 'UTF-8')
     {
         // Validate the CSV file
         $v = \Validator::make(['file' => $csv], [
             'file' => 'required|mimes:csv,txt'
         ]);
 
-        if($v->fails()) {
+        if ($v->fails()) {
             throw new \RuntimeException('This file is not a valid CSV file.');
         }
 
@@ -35,30 +35,30 @@ class CsvValidator {
         // Instantiate the CSV reader and set flags
         $this->csv = new \SplFileObject($csv);
         $this->csv->setFlags(
-            \SplFileObject::READ_CSV      |
-            \SplFileObject::READ_AHEAD    |
-            \SplFileObject::SKIP_EMPTY    |
+            \SplFileObject::READ_CSV |
+            \SplFileObject::READ_AHEAD |
+            \SplFileObject::SKIP_EMPTY |
             \SplFileObject::DROP_NEW_LINE
         );
 
-		return $this;
-	}
+        return $this;
+    }
 
-	public function fails()
+    public function fails()
     {
-	    $lineIndex = 0;
-		$errors = [];
+        $lineIndex = 0;
+        $errors = [];
         $csv = $this->csv;
         $headingRow = [];
 
         // Pull the header row from the csv if it exists
-        if($this->hasHeadingRow()) {
+        if ($this->hasHeadingRow()) {
             $headingRow = $csv->fgetcsv();
 
             // Trim the elements and convert them to the right encoding
             $headingRow = array_map('encodeCell', $headingRow);
 
-            if(empty($headingRow)) {
+            if (empty($headingRow)) {
                 throw new \RuntimeException('The CSV does not contain a heading row');
             }
 
@@ -77,15 +77,15 @@ class CsvValidator {
             // Validate the combined line
             $v = \Validator::make($combined, $this->rules);
 
-            if($v->fails()) {
+            if ($v->fails()) {
                 $errors[$lineIndex] = $v->message()->toArray();
             }
         }
 
-		$this->setErrors($errors);
+        $this->setErrors($errors);
 
-		return (!empty($this->errors));
-	}
+        return (!empty($this->errors));
+    }
 
     /**
      * @param $row
@@ -93,11 +93,11 @@ class CsvValidator {
      */
     private function validateHeadingRow($row)
     {
-	    $errors = [];
+        $errors = [];
 
-	    foreach($row as $index => $heading) {
-	        if(!in_array($heading, $this->headingKeys)) {
-	            $errors[$index] = $heading;
+        foreach ($row as $index => $heading) {
+            if (!in_array($heading, $this->headingKeys)) {
+                $errors[$index] = $heading;
             }
         }
 
@@ -110,7 +110,7 @@ class CsvValidator {
      */
     private function setErrors($errors)
     {
-	    $this->errors = $errors;
+        $this->errors = $errors;
     }
 
     /**
@@ -118,8 +118,8 @@ class CsvValidator {
      */
     public function getErrors()
     {
-		return $this->errors;
-	}
+        return $this->errors;
+    }
 
     /**
      * @param $rules
@@ -127,23 +127,23 @@ class CsvValidator {
      */
     private function setRules($rules)
     {
-		$this->rules = $rules;
-		$this->headingKeys = array_keys($rules);
-	}
+        $this->rules = $rules;
+        $this->headingKeys = array_keys($rules);
+    }
 
     /**
      * @return bool
      */
     private function hasHeadingRow()
     {
-        foreach($this->headingKeys as $key) {
-            if(!is_int($key)) {
+        foreach ($this->headingKeys as $key) {
+            if (!is_int($key)) {
                 return true;
             }
         }
 
         return false;
-	}
+    }
 
     /**
      * @param $row
@@ -154,8 +154,7 @@ class CsvValidator {
     {
         $combined = [];
 
-        foreach($headingRow as $key => $value)
-        {
+        foreach ($headingRow as $key => $value) {
             $combined[$value] = $row[$key];
         }
 
@@ -168,7 +167,7 @@ class CsvValidator {
      */
     private function encodeCell($content)
     {
-        if($this->trim) {
+        if ($this->trim) {
             $content = trim($content);
         }
 

@@ -1,4 +1,5 @@
 <?php namespace Dsaio\CsvValidator;
+
 /**
  * Created by Stefan Danaita.
  * stefan@tribepad.com
@@ -8,7 +9,8 @@
 
 use Illuminate\Support\ServiceProvider;
 
-class CsvValidatorServiceProvider extends ServiceProvider {
+class CsvValidatorServiceProvider extends ServiceProvider
+{
 
     /**
      * Indicates if loading of the provider is deferred.
@@ -33,8 +35,7 @@ class CsvValidatorServiceProvider extends ServiceProvider {
      */
     public function register()
     {
-        $this->app['csv-validator'] = $this->app->share(function($app)
-        {
+        $this->app['csv-validator'] = $this->app->share(function ($app) {
             return new CsvValidator;
         });
     }
