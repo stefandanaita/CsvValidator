@@ -249,7 +249,7 @@ class CsvValidator
      * @param $content
      * @return string
      */
-    protected function encodeCell($content)
+    public function encodeCell($content)
     {
         if ($this->getTrim()) {
             $content = trim($content);
