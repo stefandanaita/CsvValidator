@@ -8,47 +8,42 @@
 
 class CsvValidator
 {
-    private $csv,
+    protected $csv,
         $rules = [],
         $headingKeys = [],
         $errors = [],
         $trim = true,
         $encoding = 'UTF-8';
 
-    public function make($csv, $rules, $trim = true, $encoding = 'UTF-8')
+    /**
+     * @param \SplFileObject $csv
+     * @param $rules
+     * @param bool $trim
+     * @param string $encoding
+     * @return $this
+     */
+    public function make(\SplFileObject $csv, $rules, $trim = true, $encoding = 'UTF-8')
     {
-        // Validate the CSV file
-        $v = \Validator::make(['file' => $csv], [
-            'file' => 'required|mimes:csv,txt'
-        ]);
-
-        if ($v->fails()) {
-            throw new \RuntimeException('This file is not a valid CSV file.');
-        }
-
-        $this->trim = $trim;
-        $this->encoding = $encoding;
+        $this->setTrim($trim);
+        $this->setEncoding($encoding);
+        $this->setCSV($csv);
 
         // Set the $rules and $headingKeys
         $this->setRules($rules);
 
-        // Instantiate the CSV reader and set flags
-        $this->csv = new \SplFileObject($csv);
-        $this->csv->setFlags(
-            \SplFileObject::READ_CSV |
-            \SplFileObject::READ_AHEAD |
-            \SplFileObject::SKIP_EMPTY |
-            \SplFileObject::DROP_NEW_LINE
-        );
-
         return $this;
     }
 
+    /**
+     * This is where the validation is happening
+     * The CSV file is read row by row to save memory
+     * @return bool
+     */
     public function fails()
     {
+        $csv = $this->getCSV();
+
         $lineIndex = 0;
-        $errors = [];
-        $csv = $this->csv;
         $headingRow = [];
 
         // Pull the header row from the csv if it exists
@@ -62,58 +57,37 @@ class CsvValidator
                 throw new \RuntimeException('The CSV does not contain a heading row');
             }
 
-            $errors[0] = $this->validateHeadingRow($headingRow);
+            // If the heading row is invalid, don't go any further
+            if(!$this->validateHeadingRow($headingRow)) {
+                return true;
+            }
         }
 
-        while ($row = $csv->fgetcsv()) {
+        while (!$csv->eof()) {
+            $row = $csv->fgetcsv();
             $lineIndex++;
 
             // Trim the elements and convert them to the right encoding
             $row = array_map('encodeCell', $row);
 
             // Build assoc array between header and row elements
-            $combined = !empty($headingRow) ? $this->combineRowHeader($row, $headingRow) : $row;
+            $combined = $this->hasHeadingRow() ? $this->combineRowHeader($row, $headingRow) : $row;
 
             // Validate the combined line
-            $v = \Validator::make($combined, $this->rules);
+            $v = \Validator::make($combined, $this->getRules());
 
             if ($v->fails()) {
-                $errors[$lineIndex] = $v->message()->toArray();
+                $this->setErrors($lineIndex, $v->message()->toArray());
             }
         }
 
-        $this->setErrors($errors);
-
-        return (!empty($this->errors));
+        return (!empty($this->getErrors()));
     }
 
     /**
-     * @param $row
-     * @return array
-     */
-    private function validateHeadingRow($row)
-    {
-        $errors = [];
-
-        foreach ($row as $index => $heading) {
-            if (!in_array($heading, $this->headingKeys)) {
-                $errors[$index] = $heading;
-            }
-        }
-
-        return $errors;
-    }
-
-    /**
-     * @param $errors
-     * @return void
-     */
-    private function setErrors($errors)
-    {
-        $this->errors = $errors;
-    }
-
-    /**
+     * Returns an associative array of errors.
+     * $errors[0] contains the errors from the Heading row, if exists
+     * $errors[n] contains the errors from the n-th csv row
      * @return array
      */
     public function getErrors()
@@ -122,13 +96,127 @@ class CsvValidator
     }
 
     /**
+     * @param $row
+     * @return bool
+     */
+    protected function validateHeadingRow($row)
+    {
+        $errors = [];
+
+        foreach ($row as $index => $heading) {
+            if (!in_array($heading, $this->getHeadingKeys())) {
+                $errors[$index] = $heading;
+            }
+        }
+
+        if(!empty($errors)) {
+            $this->setErrors(0, $errors);
+        }
+
+        return empty($errors);
+    }
+
+    /**
+     * @param $csv
+     * @return void
+     */
+    protected function setCSV($csv)
+    {
+        $csv->setFlags(
+            \SplFileObject::READ_CSV |
+            \SplFileObject::READ_AHEAD |
+            \SplFileObject::SKIP_EMPTY |
+            \SplFileObject::DROP_NEW_LINE
+        );
+
+        $this->csv = $csv;
+    }
+
+    /**
+     * @return \SplFileObject
+     */
+    private function getCSV()
+    {
+        return $this->csv;
+    }
+
+    /**
+     * @param $keys
+     * @return void
+     */
+    private function setHeadingKeys($keys)
+    {
+        $this->headingKeys = $keys;
+    }
+
+    /**
+     * @return array
+     */
+    private function getHeadingKeys()
+    {
+        return $this->headingKeys;
+    }
+
+    /**
+     * @param $key
+     * @param $errors
+     */
+    protected function setErrors($key, $errors)
+    {
+        $this->errors[$key] = $errors;
+    }
+
+    /**
+     * This sets the rules and the expected heading keys
      * @param $rules
      * @return void
      */
     private function setRules($rules)
     {
         $this->rules = $rules;
-        $this->headingKeys = array_keys($rules);
+        $this->setHeadingKeys(array_keys($rules));
+    }
+
+    /**
+     * @return array
+     */
+    private function getRules()
+    {
+        return $this->rules;
+    }
+
+    /**
+     * @param $trim
+     * @return void
+     */
+    private function setTrim($trim)
+    {
+        $this->trim = $trim;
+    }
+
+    /**
+     * @return bool
+     */
+    private function getTrim()
+    {
+        return $this->trim;
+    }
+
+    /**
+     * @param $encoding
+     * @return void
+     */
+    private function setEncoding($encoding)
+    {
+        $this->encoding = $encoding;
+    }
+
+    /**
+     * @return string
+     */
+    private function getEncoding()
+    {
+        return $this->encoding;
     }
 
     /**
@@ -136,13 +224,9 @@ class CsvValidator
      */
     private function hasHeadingRow()
     {
-        foreach ($this->headingKeys as $key) {
-            if (!is_int($key)) {
-                return true;
-            }
-        }
+        $headingKeys = $this->headingKeys;
 
-        return false;
+        return !$headingKeys === array_filter($headingKeys, 'is_int');
     }
 
     /**
@@ -150,7 +234,7 @@ class CsvValidator
      * @param $headingRow
      * @return array
      */
-    private function combineRowHeader($row, $headingRow)
+    protected function combineRowHeader($row, $headingRow)
     {
         $combined = [];
 
@@ -165,12 +249,12 @@ class CsvValidator
      * @param $content
      * @return string
      */
-    private function encodeCell($content)
+    protected function encodeCell($content)
     {
-        if ($this->trim) {
+        if ($this->getTrim()) {
             $content = trim($content);
         }
 
-        return iconv(mb_detect_encoding($content, mb_detect_order(), true), $this->encoding, $content);
+        return iconv(mb_detect_encoding($content, mb_detect_order(), true), $this->getEncoding(), $content);
     }
 }
