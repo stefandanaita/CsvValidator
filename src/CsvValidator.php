@@ -12,6 +12,7 @@ class CsvValidator
         $rules = [],
         $headingKeys = [],
         $errors = [],
+        $requiredHeadings = [],
         $trim = true,
         $encoding = 'UTF-8';
 
@@ -22,8 +23,9 @@ class CsvValidator
      * @param string $encoding
      * @return $this
      */
-    public function make(\SplFileObject $csv, $rules, $trim = true, $encoding = 'UTF-8')
+    public function make(\SplFileObject $csv, $rules, $requiredHeadings = [], $trim = true, $encoding = 'UTF-8')
     {
+        $this->setRequiredHeadings($requiredHeadings);
         $this->setTrim($trim);
         $this->setEncoding($encoding);
         $this->setCSV($csv);
@@ -102,9 +104,19 @@ class CsvValidator
     {
         $errors = [];
 
+        // Check if the existing headings are valid
         foreach ($row as $index => $heading) {
             if (!in_array($heading, $this->getHeadingKeys())) {
                 $errors[$heading][0] = 'Heading ' . $heading . ' is not a valid heading for this CSV.';
+            }
+        }
+
+        // Check if all the required headings are present
+        if(!empty($this->getRequiredHeadings()) && $this->getRequiredHeadings() !== array_intersect($this->getRequiredHeadings(), $row)) {
+            foreach($this->getRequiredHeadings() as $index => $heading) {
+                if(!in_array($heading, $row)) {
+                    $errors[$heading][0] = 'Heading ' . $heading . ' is missing from the CSV.';
+                }
             }
         }
 
@@ -242,6 +254,23 @@ class CsvValidator
         }
 
         return $combined;
+    }
+
+    /**
+     * @param $headings
+     * @return void
+     */
+    private function setRequiredHeadings($headings)
+    {
+        $this->requiredHeadings = $headings;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRequiredHeadings()
+    {
+        return $this->requiredHeadings;
     }
 
     /**
