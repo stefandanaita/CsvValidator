@@ -35,7 +35,7 @@ class CsvValidatorServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton('csv-validator', function ($app) {
+        $this->app->bind('csv-validator', function ($app) {
             return new CsvValidator();
         });
     }
