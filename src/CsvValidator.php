@@ -19,12 +19,16 @@ class CsvValidator
     /**
      * @param \SplFileObject $csv
      * @param $rules
+     * @param array $requiredHeadings
      * @param bool $trim
      * @param string $encoding
      * @return $this
      */
     public function make(\SplFileObject $csv, $rules, $requiredHeadings = [], $trim = true, $encoding = 'UTF-8')
     {
+        // Reset the variables
+        $this->rules = $this->errors = $this->headingKeys = $this->requiredHeadings = [];
+
         $this->setRequiredHeadings($requiredHeadings);
         $this->setTrim($trim);
         $this->setEncoding($encoding);
