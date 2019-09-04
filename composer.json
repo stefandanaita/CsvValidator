@@ -3,7 +3,7 @@
 	"description": "A CSV Validator based on Laravel's built-in Validator",
 	"type": "library",
 	"require": {
-		"laravel/framework": "~5.0"
+		"laravel/framework": "~5.0 || ~6.0"
 	},
 	"license": "MIT",
 	"support": {
